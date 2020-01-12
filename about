@@ -1,0 +1,13 @@
+* TODO M-x so-search "search-query" => ((question_id . title) ...)
+  Gives association list of question_ids and title form google search query
+
+** DONE google-search-question "question" -> question-ids-list
+
+** DONE api-questions ^ -> json-buffer (unparsed)
+  
+** DONE parse-json-buffer ^ -> parsed-json
+  
+** DONE get-question-id-title ^ -> '((question_id . question_title) ...) (this should be sorted)
+
+** TODO get-answers (question-id-list) -> ((question_id. (answer1-body answer2-body ...)) ...)
+*** TODO api-question-answers (list-of-question-ids) -> response-buffer

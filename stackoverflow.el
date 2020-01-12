@@ -4,6 +4,7 @@
 (defconst so-google-base-url "https://www.google.com/search?q=%s")
 (defconst so-regex "stackoverflow.com/questions/\\([[:digit:]]+\\)")
 (defconst so-api-base-url-question "https://api.stackexchange.com/2.2/questions/%s?site=stackoverflow")
+(defconst so-api-base-url-question-answers "https://api.stackexchange.com/2.2/questions/%s/answers?site=stackoverflow&sort=votes")
 
 (defun so-extract-question-numbers (google-search-result-buffer)
   "extract stackoverflow questions from given buffer containing webpage of google search results"
@@ -43,17 +44,17 @@
     (substring ans 0 (1- (length ans)))))
 
 (defun so-api-questions (list-of-question-ids)
-  "call stackexchange api and get json response in associativity list"
+  "call stackexchange api and return response in a buffer"
   (let (( response (url-retrieve-synchronously
 		    (format so-api-base-url-question
 			    (so-vectorize list-of-question-ids)))))
-    (switch-to-buffer response)))
-    
+    response))
+
 
 (defun so-google-search-question (query)
-  "search on google for QUERY and return the questions"
+  "search on google for QUERY and return the question ids list"
   (interactive "sEnter query: ")
-  (let (clean-query (so-clean-string query)) ;;clean the query
+  (let ((clean-query (so-clean-string query))) ;;clean the query
     (message "cleaned query = %s" clean-query)
     (so-extract-question-numbers (so-search-google clean-query))))
 
@@ -72,7 +73,7 @@
 
 (defun so-json-get-items (parsed-json)
   "return items list from original parsed json"
-  (cdr (assoc 'items parsed-json)))
+  (so-vector-to-list (cdr (assoc 'items parsed-json))))
 
 (defun so-loose-equality (num1 num2)
   (equal (format "%s" num1) (format "%s" num2)))
@@ -85,7 +86,7 @@
 
 (defun so-json-get-question-item-from-parsed-json (parsed-json question-id)
   "get element in items list with question_id as given as argument otherwise return nil"
-  (let ((items-list (so-vector-to-list (so-json-get-items parsed-json))))
+  (let ((items-list (so-json-get-items parsed-json)))
     (let ((question-item nil))
       (dolist (current-item items-list question-item)
 	(if (so-loose-equality
@@ -95,9 +96,46 @@
 	  )))))
 
 
-	    
-  
+(defun so-get-question-id-title (parsed-json)
+  (let ((items-list (so-json-get-items parsed-json))
+	(id-title-alist '() ))
+    (dolist (current-item items-list)
+      (let ((current-id (so-get-question-id-from-item current-item))
+	    (current-title (so-get-question-title-from-item current-item)))
+	(setq id-title-alist (cons (cons current-id current-title) id-title-alist))))
+    id-title-alist))
 
+(defun so-api-question-answers (list-of-question-ids)
+  "call stackexchange api and get json response in associativity list"
+  (let (( response-buffer (url-retrieve-synchronously
+		    (format so-api-base-url-question-answers
+			    (so-vectorize list-of-question-ids)))))
+    response-buffer))
+
+(defun so-get-answers (question-ids-list)
+  (let* ((response-buffer (so-api-question-answers question-ids-list) )
+	 (parsed-json (so-parse-json-buffer response-buffer))
+	 (items-list (so-json-get-items parsed-json))
+	 (question-id-answers-list '())) ;; ((question_id answer1-body answer2 ...) ..)
+
+    ;; create empty answer list for each question
+    (dolist (question-id question-ids-list)
+      (setq question-id-answers-list
+	    (cons (cons question-id '()) question-id-answers-list)))
+
+    ;; iterate through
+	 
+    
+    
+
+
+
+
+
+
+
+
+    
 ;; (defun so-json-search-question-id (parsed-json question-id)
 ;;   (dolist (ele (so-json-get-items parsed-json))
 

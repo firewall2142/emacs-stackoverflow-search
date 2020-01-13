@@ -48,7 +48,7 @@
   (let (( response (url-retrieve-synchronously
 		    (format so-api-base-url-question
 			    (so-vectorize list-of-question-ids)))))
-    response))
+    (so-parse-json-buffer response)))
 
 
 (defun so-google-search-question (query)
@@ -96,13 +96,13 @@
 	  )))))
 
 
-(defun so-get-question-id-title (parsed-json)
+(defun so-get-question-title-id (parsed-json)
   (let ((items-list (so-json-get-items parsed-json))
 	(id-title-alist '() ))
     (dolist (current-item items-list)
       (let ((current-id (so-get-question-id-from-item current-item))
 	    (current-title (so-get-question-title-from-item current-item)))
-	(setq id-title-alist (cons (cons current-id current-title) id-title-alist))))
+	(setq id-title-alist (cons (cons current-title current-id) id-title-alist))))
     id-title-alist))
 
 (defun so-api-question-answers (list-of-question-ids)
@@ -112,21 +112,32 @@
 			    (so-vectorize list-of-question-ids)))))
     response-buffer))
 
-(defun so-get-answers (question-ids-list)
-  (let* ((response-buffer (so-api-question-answers question-ids-list) )
-	 (parsed-json (so-parse-json-buffer response-buffer))
-	 (items-list (so-json-get-items parsed-json))
-	 (question-id-answers-list '())) ;; ((question_id answer1-body answer2 ...) ..)
 
-    ;; create empty answer list for each question
-    (dolist (question-id question-ids-list)
-      (setq question-id-answers-list
-	    (cons (cons question-id '()) question-id-answers-list)))
+(defun so-api-question-title-id (question-ids-list)
+  (let* ((api-json-response
+			     (so-api-questions question-ids-list)))
+    (so-get-question-title-id api-json-response)))
 
-    ;; iterate through
-	 
-    
-    
+;; (setq test-query "brainfuck stackoverflow")
+;; (setq test-tid (so-api-question-title-id
+;; 		(so-google-search-question test-query)))
+
+(defun so-helm-question-source (question-title-id-list)
+  (let ((qtids question-title-id-list))
+    `((name . "Questions")
+      (candidates . ,(mapcar 'car qtids))
+      (action . (lambda (title)
+		  (let ((qid (cdr
+			      (assoc
+			       title question-title-id-list))))
+		    (message "selected id = %S" qid)))))
+    ))
+
+(defun so-helm-display-questions (question-title-id-list)
+  (message "%s" question-title-id-list)
+  (helm :sources (so-helm-question-source question-title-id-list)))
+
+;; (so-helm-display-questions test-tid)
 
 
 
@@ -135,7 +146,21 @@
 
 
 
-    
+
+
+;; (defun so-get-answers (question-ids-list)
+;;   (let* ((response-buffer (so-api-question-answers question-ids-list) )
+;; 	 (parsed-json (so-parse-json-buffer response-buffer))
+;; 	 (items-list (so-json-get-items parsed-json))
+;; 	 (question-id-answers-list '())) ;; ((question_id answer1-body answer2 ...) ..)
+
+;;     ;; create empty answer list for each question
+;;     (dolist (question-id question-ids-list)
+;;       (setq question-id-answers-list
+;; 	    (cons (cons question-id '()) question-id-answers-list)))
+
+;;     ;; iterate through
+
 ;; (defun so-json-search-question-id (parsed-json question-id)
 ;;   (dolist (ele (so-json-get-items parsed-json))
 

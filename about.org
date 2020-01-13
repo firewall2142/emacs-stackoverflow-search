@@ -9,5 +9,7 @@
   
 ** DONE get-question-id-title ^ -> '((question_id . question_title) ...) (this should be sorted)
 
-** TODO get-answers (question-id-list) -> ((question_id. (answer1-body answer2-body ...)) ...)
+** TODO get-answers (question-id-list) -> ((qid. (ans1 ans2 ...)) ...)
 *** TODO api-question-answers (list-of-question-ids) -> response-buffer
+** helm-list-questions (parsed-json)
+   does as expected

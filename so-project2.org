@@ -1,0 +1,32 @@
+* internet searches
+** google-search-question
+   params:  question (in natural language)
+   returns: question ids-list
+** stackexchange-api-call
+   params: questions-list
+   side-effect: sets *so-json-response* to parsed json response of the api call
+   returns: nil
+
+* json interaction functions
+** get-question-title-id-list
+   no params, uses global *so-json-response* variable to get question titles and ids
+   return: ((title.id) ...)
+** get-question-answers
+   params: question-id
+   returns: (answer1 answer2 ...)
+
+* form adjustments
+** make-answer-displayable
+   param: (answer1 answer2 ...)
+   returns ((displayable-answer . raw-answer) ...)
+
+* helm-ui
+** display-answer
+   param: answer-full-body
+   does: display the answer in a buffer
+** action-question
+   param: question-id
+   does: makes helm-ui contains answers and attaches appropriate action
+** display-questions
+   param: ((ques-title. ques-id))
+   does: makes helm-ui and attaches appropriate action

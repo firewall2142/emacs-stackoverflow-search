@@ -2,6 +2,12 @@
 ** google-search-question
    params:  question (in natural language)
    returns: question ids-list
+*** so-clean-string
+    converts string to be put in url ie: hello world this is sparta=> hello+world+this+is+sparta
+*** so-extract-question-numbers
+    extract stackoverflow questions from given buffer containing webpage of google search results
+*** so-search-google
+    search on google and return the webpage as a buffer
 ** stackexchange-api-call
    params: questions-list
    side-effect: sets *so-json-response* to parsed json response of the api call

@@ -13,22 +13,28 @@
    side-effect: sets *so-json-response* to parsed json response of the api call
    returns: nil
 
+
 * DONE json interaction functions
 ** get-question-title-id-list
    no params, uses global *so-json-response* variable to get question titles and ids
    return: ((title.id) ...)
 ** get-question-answers
    params: question-id
-   returns: (answer1 answer2 ...)
+   returns: (answer1 answer2 ...) each element is an associative list of original json reponse attributes of answer 
+
 
 * helm-ui
-** display-answer
-   param: answer-full-body
-   does: display the answer in a buffer
-** action-question
-   param: question-id
-   does: makes helm-ui contains answers and attaches appropriate action
 ** DONE display-questions-ui
    param: ((ques-title. ques-id))
-   does: makes helm-ui and attaches appropriate action
-** 
+   does: makes helm-ui and returns selection
+   return : returns selected ques-id
+** display-answers-ui
+   param: question-id
+   does: makes helm-ui containing answers
+   returns: answer-alist of the selection
+*** displayable-answer
+    params: answer-associtation-list
+    returns: a single line in the form "[<votes>] answer stripped of html tags ..."
+** render-answer
+   param: answer-full-body
+   does: display the answer in a buffer

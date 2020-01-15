@@ -1,9 +1,10 @@
 (require 'json)
 (require 'url)
+(require 'cl-lib)
 
 (defvar *so-json-response* nil
   "variable containing the most recent api call's json response")
-(defconst so-google-base-url "https://www.google.com/search?q=%s")
+(defconst so-google-base-url "https://www.google.com/search?q=site:stackoverflow.com %s&num=50")
 (defconst so-regex "stackoverflow.com/questions/\\([[:digit:]]+\\)")
 (defconst so-api-base-url-question
   "https://api.stackexchange.com/2.2/questions/%s?order=desc&sort=activity&site=stackoverflow&filter=!.Iwe-B)-NpGS._8.rRsprhjVhVXRm")
@@ -46,9 +47,7 @@
   (let ((clean-query (so-clean-string query))) ;;clean the query
     (message "cleaned query = %s" clean-query)
     (so-extract-question-numbers (so-search-google clean-query))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; test
-;; (message "%s" (so-google-search-question "emacs change between windows quickly stackoverflow"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; stackexchange-api-call
@@ -77,7 +76,6 @@
 			    (so-vectorize list-of-question-ids)))))
     (setq *so-json-response* (so-parse-json-buffer response-buffer))))
 
-;; (so-stackexchange-api-call '(7394289 1774832 91071 10774995 4671819))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -102,10 +100,10 @@
     (dolist (current-item items-list)
       (let ((current-id (so-get-question-id-from-item current-item))
 	    (current-title (so-get-question-title-from-item current-item)))
-	(setq id-title-alist (cons (cons current-title current-id) id-title-alist))))
+	(setq id-title-alist (cons (cons (replace-html current-title) current-id) id-title-alist))))
     id-title-alist))
 
-(setq test-ques-title-id (get-question-title-id-list))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun so-loose-equality (num1 num2)
@@ -117,41 +115,102 @@
       (if (so-loose-equality (so-get-question-id-from-item item) question-id)
 	  (setq item-found item)))))
 
-;; test (pp (so-get-question-item-from-id (so-json-get-items *so-json-response*) "7394289"))
 
 (defun get-question-answers (question-id)
   "params: question-id
    returns: (answer1 answer2 ...)"
   (let* ((items-list (so-json-get-items *so-json-response*))
 	 (question-item (so-get-question-item-from-id items-list question-id))
-	 (answer-items-list (so-vector-to-list(cdr (assoc 'answers question-item))))
-	 (answer-body-list '()))
-    (dolist (answer-item answer-items-list answer-body-list)
-      (setq answer-body-list (cons (cdr (assoc 'body answer-item)) answer-body-list)))))
+	 (answer-items-list (so-vector-to-list(cdr (assoc 'answers question-item)))))
+    answer-items-list))
 
 ;; (message (elt (get-question-answers 91071) 0))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; HELM UI
-(defun display-questions-ui (question-title-ids)
-  "param: ((ques-title. ques-id))
+(defun display-questions-ui ()
+  "param:nothing
    does: makes helm-ui and attaches appropriate action"
-  (let ((so-helm-source `((name ."Questions")
-			(candidates . ,question-title-ids)
-			(action . (lambda (ques-id)
-				    ques-id)))))
-    (message "%S" so-helm-source)
+  (let* ((question-title-ids (get-question-title-id-list))
+	 (so-helm-source `((name ."Questions")
+			   (candidates . ,question-title-ids)
+			   (action . (lambda (ques-id)
+				       ques-id)))))
+    ;;(message "%S" so-helm-source)
     (helm :sources '(so-helm-source))))
 
-(defun display-answer (question-id)
+(defun display-answer-ui (question-id)
   "param: answer-full-body
    does: display the answer in a buffer"
-  (let* ((answer-body-list (get-question-answers question-id))
+  (let* ((answers-alist (get-question-answers question-id))
+	 (answer-body-list (displayable-answers answers-alist))
+	 (zipped-body-alist (cl-mapcar
+			     'cons
+			     answer-body-list
+			     answers-alist))
 	 (so-helm-source `((name . "Answers")
-			   (candidates . ,answer-body-list)
-			   (action . (lambda (answer-body)
-				       (message answer-body))))))
-    (message "answerbodylist = \n==================\n%S" answer-body-list)
+			   (candidates . ,zipped-body-alist)
+			   (action . (lambda (answer-alist)
+				       ;; (message "%S"
+				       ;; 	(cdr (assoc
+				       ;; 	      'answer_id
+				       ;; 	      answer-alist)))
+				       answer-alist)))))
+;;    (message "answerbodylist = \n=============\n%S" answer-body-list)
     (helm :sources '(so-helm-source))))
-  
+
+(defun replace-html (str)
+  (setq str (replace-regexp-in-string "<[^<>]*>" " " str))
+  (setq str (replace-regexp-in-string "[\t\n\\(  \\)]+" " " str))
+  (setq str (replace-regexp-in-string "&amp;" "&" str))
+  (setq str (replace-regexp-in-string "&lt;" "<" str))
+  (setq str (replace-regexp-in-string "&gt;" ">" str))
+  (setq str (replace-regexp-in-string "&#39;" "'" str))
+  str)
+
+(defun displayable-answers (answers-alist)
+  ;;TODO
+  (mapcar
+   (lambda (ans-alist)
+     (let ((ans (cdr (assoc 'body ans-alist))))
+       ;; (message "ans=%S" ans-alist)
+       (setq ans (replace-html ans))
+       ;; (message "ans\n============================================\n%S\n===============================\n\n\n\n" ans)
+     ans)
+   )
+   answers-alist))
+
+
+(defun render-answer (answer-alist)
+  "Render answer in a new buffer name *stackoverflow-answer*"
+  (let ((answer-buffer "*stackoverflow-answer*"))
+    (if (not (null (get-buffer answer-buffer)))
+	(kill-buffer answer-buffer))
+    (get-buffer-create answer-buffer)
+    (let ((split-height-threshold nil)
+	  (split-width-threshold 0))
+      (display-buffer answer-buffer))
+    (switch-to-buffer-other-window answer-buffer)
+    (insert (cdr (assoc 'body answer-alist)))
+    (shr-render-region (point-min) (point-max)))
+  (special-mode))
+
+
+;;;;;;;; TESTS ;;;;;;;;;;;;;;;
+;; (message "%s" (so-google-search-question "emacs change between windows quickly stackoverflow"))
+;; (setq test-ques-title-id (get-question-title-id-list))
+;; (so-stackexchange-api-call '(7394289 1774832 91071 10774995 4671819))
+;; test (pp (so-get-question-item-from-id (so-json-get-items *so-json-response*) "7394289"))
 ;; (message "areturn = %S" (display-questions-ui test-ques-title-id))
-(display-answer 91071)
+;; (render-answer (display-answer-ui 91071))
+;; (setq test-string "<be asdf asd=\"asdfasdf\"sadfasd > asdfasdljf \t \n\nasdfasd \t\t adsf         asdfasdf \n</asdfasdf>")
+;; (setq test-string (replace-regexp-in-string "<[^<>]*>" " " test-string))
+;; (setq test-string (replace-regexp-in-string "[\t\n\\(  \\)]+" " " test-string))
+;; (message test-string)
+
+(defun stackoverflow-search (query)
+  (interactive "sEnter query: ")
+  (let ((ques-ids (so-google-search-question query)))
+    (so-stackexchange-api-call ques-ids)
+    (let* ((sel-qid (display-questions-ui))
+	   (sel-ans (display-answer-ui sel-qid)))
+      (render-answer sel-ans))))

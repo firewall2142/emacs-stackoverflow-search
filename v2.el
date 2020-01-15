@@ -48,7 +48,7 @@
     (so-extract-question-numbers (so-search-google clean-query))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; test
-;; (message "%s" (so-google-search-question "stackoverflow java"))
+;; (message "%s" (so-google-search-question "emacs change between windows quickly stackoverflow"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; stackexchange-api-call
@@ -77,7 +77,7 @@
 			    (so-vectorize list-of-question-ids)))))
     (setq *so-json-response* (so-parse-json-buffer response-buffer))))
 
-;; test (so-stackexchange-api-call '(53452713 22182669 18170990 3061116 214741 24421046))
+;; (so-stackexchange-api-call '(7394289 1774832 91071 10774995 4671819))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -107,3 +107,27 @@
 
 ;;(message "%s" (get-question-title-id-list))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun so-loose-equality (num1 num2)
+  (equal (format "%s" num1) (format "%s" num2)))
+
+(defun so-get-question-item-from-id (items-list question-id)
+  (let ((item-found nil))
+    (dolist (item items-list item-found)
+      (if (so-loose-equality (so-get-question-id-from-item item) question-id)
+	  (setq item-found item)))))
+
+;; test (pp (so-get-question-item-from-id (so-json-get-items *so-json-response*) "7394289"))
+
+(defun get-question-answers (question-id)
+  "params: question-id
+   returns: (answer1 answer2 ...)"
+  (let* ((items-list (so-json-get-items *so-json-response*))
+	 (question-item (so-get-question-item-from-id items-list question-id))
+	 (answer-items-list (so-vector-to-list(cdr (assoc 'answers question-item))))
+	 (answer-body-list '()))
+    (dolist (answer-item answer-items-list answer-body-list)
+      (setq answer-body-list (cons (cdr (assoc 'body answer-item)) answer-body-list)))))
+
+;;test (message "%S" (get-question-answers 91071))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

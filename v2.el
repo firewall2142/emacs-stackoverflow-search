@@ -105,7 +105,7 @@
 	(setq id-title-alist (cons (cons current-title current-id) id-title-alist))))
     id-title-alist))
 
-;;(message "%s" (get-question-title-id-list))
+(setq test-ques-title-id (get-question-title-id-list))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun so-loose-equality (num1 num2)
@@ -129,5 +129,29 @@
     (dolist (answer-item answer-items-list answer-body-list)
       (setq answer-body-list (cons (cdr (assoc 'body answer-item)) answer-body-list)))))
 
-;;test (message "%S" (get-question-answers 91071))
+;; (message (elt (get-question-answers 91071) 0))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; HELM UI
+(defun display-questions-ui (question-title-ids)
+  "param: ((ques-title. ques-id))
+   does: makes helm-ui and attaches appropriate action"
+  (let ((so-helm-source `((name ."Questions")
+			(candidates . ,question-title-ids)
+			(action . (lambda (ques-id)
+				    ques-id)))))
+    (message "%S" so-helm-source)
+    (helm :sources '(so-helm-source))))
+
+(defun display-answer (question-id)
+  "param: answer-full-body
+   does: display the answer in a buffer"
+  (let* ((answer-body-list (get-question-answers question-id))
+	 (so-helm-source `((name . "Answers")
+			   (candidates . ,answer-body-list)
+			   (action . (lambda (answer-body)
+				       (message answer-body))))))
+    (message "answerbodylist = \n==================\n%S" answer-body-list)
+    (helm :sources '(so-helm-source))))
+  
+;; (message "areturn = %S" (display-questions-ui test-ques-title-id))
+(display-answer 91071)

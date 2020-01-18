@@ -1,5 +1,5 @@
 # Emacs stackoverflow search
-Search errors, warnings or anything on Stackoverflow inside emacs! \
+Search errors, warnings or anything on Stackoverflow inside Emacs! \
 \
 \
 To use do\

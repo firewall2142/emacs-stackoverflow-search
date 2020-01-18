@@ -7,11 +7,9 @@
 (defconst so-google-base-url "https://www.google.com/search?q=site:stackoverflow.com %s&num=50")
 (defconst so-regex "stackoverflow.com/questions/\\([[:digit:]]+\\)")
 (defconst so-api-base-url-question
-  "https://api.stackexchange.com/2.2/questions/%s?order=desc&sort=activity&site=stackoverflow&filter=!.Iwe-B)-NpGS._8.rRsprhjVhVXRm")
+  "https://api.stackexchange.com/2.2/questions/%s?order=desc&sort=activity&site=stackoverflow&filter=!.Iwe-BLQGuP55LzGq_b4LffyXSIpy")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; so-google-search-question
 (defun so-clean-string (string-to-clean)
   "converts string to be put in url ie: hello world this is sparta=> hello+world+this+is+sparta"
   (interactive "sString to clean: ")
@@ -49,8 +47,6 @@
     (so-extract-question-numbers (so-search-google clean-query))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; stackexchange-api-call
 (defun so-vectorize (list-of-entities)
   (let ((ans ""))
     (dolist (x list-of-entities ans)
@@ -76,7 +72,7 @@
 			    (so-vectorize list-of-question-ids)))))
     (setq *so-json-response* (so-parse-json-buffer response-buffer))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 (defun so-vector-to-list (vec)
@@ -92,19 +88,19 @@
 (defun so-get-question-title-from-item (item)
   (cdr (assoc 'title item)))
 
+
+
 (defun get-question-title-id-list ()
   "no params, uses global *so-json-response* variable to get question titles and ids
-   return: ((title.id) ...)"
+   return: ((title.id) ...) where title is of the form [votes] <actual-question-title>"
   (let ((items-list (so-json-get-items *so-json-response*))
 	(id-title-alist '() ))
     (dolist (current-item items-list)
       (let ((current-id (so-get-question-id-from-item current-item))
-	    (current-title (so-get-question-title-from-item current-item)))
+	    (current-title (format "%s" (so-get-question-title-from-item current-item))))
 	(setq id-title-alist (cons (cons (replace-html current-title) current-id) id-title-alist))))
     id-title-alist))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun so-loose-equality (num1 num2)
   (equal (format "%s" num1) (format "%s" num2)))
@@ -124,8 +120,6 @@
 	 (answer-items-list (so-vector-to-list(cdr (assoc 'answers question-item)))))
     answer-items-list))
 
-;; (message (elt (get-question-answers 91071) 0))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; HELM UI
 (defun display-questions-ui ()
   "param:nothing
@@ -135,7 +129,6 @@
 			   (candidates . ,question-title-ids)
 			   (action . (lambda (ques-id)
 				       ques-id)))))
-    ;;(message "%S" so-helm-source)
     (helm :sources '(so-helm-source))))
 
 (defun display-answer-ui (question-id)
@@ -150,12 +143,7 @@
 	 (so-helm-source `((name . "Answers")
 			   (candidates . ,zipped-body-alist)
 			   (action . (lambda (answer-alist)
-				       ;; (message "%S"
-				       ;; 	(cdr (assoc
-				       ;; 	      'answer_id
-				       ;; 	      answer-alist)))
 				       answer-alist)))))
-;;    (message "answerbodylist = \n=============\n%S" answer-body-list)
     (helm :sources '(so-helm-source))))
 
 (defun replace-html (str)
@@ -165,16 +153,14 @@
   (setq str (replace-regexp-in-string "&lt;" "<" str))
   (setq str (replace-regexp-in-string "&gt;" ">" str))
   (setq str (replace-regexp-in-string "&#39;" "'" str))
+  (setq str (replace-regexp-in-string "&quote;" "'" str))
   str)
 
 (defun displayable-answers (answers-alist)
-  ;;TODO
   (mapcar
    (lambda (ans-alist)
      (let ((ans (cdr (assoc 'body ans-alist))))
-       ;; (message "ans=%S" ans-alist)
        (setq ans (replace-html ans))
-       ;; (message "ans\n============================================\n%S\n===============================\n\n\n\n" ans)
      ans)
    )
    answers-alist))
@@ -191,21 +177,10 @@
       (display-buffer answer-buffer))
     (switch-to-buffer-other-window answer-buffer)
     (insert (cdr (assoc 'body answer-alist)))
-    (shr-render-region (point-min) (point-max)))
+    (shr-render-region (point-min) (point-max))
+    (goto-char (point-min)))
   (special-mode))
 
-
-;;;;;;;; TESTS ;;;;;;;;;;;;;;;
-;; (message "%s" (so-google-search-question "emacs change between windows quickly stackoverflow"))
-;; (setq test-ques-title-id (get-question-title-id-list))
-;; (so-stackexchange-api-call '(7394289 1774832 91071 10774995 4671819))
-;; test (pp (so-get-question-item-from-id (so-json-get-items *so-json-response*) "7394289"))
-;; (message "areturn = %S" (display-questions-ui test-ques-title-id))
-;; (render-answer (display-answer-ui 91071))
-;; (setq test-string "<be asdf asd=\"asdfasdf\"sadfasd > asdfasdljf \t \n\nasdfasd \t\t adsf         asdfasdf \n</asdfasdf>")
-;; (setq test-string (replace-regexp-in-string "<[^<>]*>" " " test-string))
-;; (setq test-string (replace-regexp-in-string "[\t\n\\(  \\)]+" " " test-string))
-;; (message test-string)
 
 (defun stackoverflow-search (query)
   (interactive "sEnter query: ")
@@ -214,3 +189,5 @@
     (let* ((sel-qid (display-questions-ui))
 	   (sel-ans (display-answer-ui sel-qid)))
       (render-answer sel-ans))))
+
+(stackoverflow-search "how to delete git branch")

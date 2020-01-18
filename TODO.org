@@ -25,7 +25,7 @@
 
 * helm-ui
 ** DONE display-questions-ui
-   param: ((ques-title. ques-id))
+   param: nothing
    does: makes helm-ui and returns selection
    return : returns selected ques-id
 ** display-answers-ui

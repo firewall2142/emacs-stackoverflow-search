@@ -189,5 +189,3 @@
     (let* ((sel-qid (display-questions-ui))
 	   (sel-ans (display-answer-ui sel-qid)))
       (render-answer sel-ans))))
-
-(stackoverflow-search "how to delete git branch")

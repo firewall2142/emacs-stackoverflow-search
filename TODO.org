@@ -1,24 +1,33 @@
 * DONE internet searches
+<<<<<<< HEAD:so-project2.org
+** DONE google-search-question
+=======
 ** google-search-question
+>>>>>>> cc4d399e796ccee742c4e36a7e5057b01bd99350:TODO.org
    params:  question (in natural language)
    returns: question ids-list
-*** so-clean-string
+*** DONE so-clean-string
     converts string to be put in url ie: hello world this is sparta=> hello+world+this+is+sparta
-*** so-extract-question-numbers
+*** DONE so-extract-question-numbers
     extract stackoverflow questions from given buffer containing webpage of google search results
-*** so-search-google
+*** DONE so-search-google
     search on google and return the webpage as a buffer
-** stackexchange-api-call
+** DONE stackexchange-api-call
    params: questions-list
    side-effect: sets *so-json-response* to parsed json response of the api call
    returns: nil
 
+<<<<<<< HEAD:so-project2.org
+* DONE json interaction functions
+** DONE get-question-title-id-list
+=======
 
 * DONE json interaction functions
 ** get-question-title-id-list
+>>>>>>> cc4d399e796ccee742c4e36a7e5057b01bd99350:TODO.org
    no params, uses global *so-json-response* variable to get question titles and ids
    return: ((title.id) ...)
-** get-question-answers
+** DONE get-question-answers
    params: question-id
    returns: (answer1 answer2 ...) each element is an associative list of original json reponse attributes of answer 
 

@@ -1,5 +1,9 @@
 * DONE internet searches
+<<<<<<< HEAD:so-project2.org
 ** DONE google-search-question
+=======
+** google-search-question
+>>>>>>> cc4d399e796ccee742c4e36a7e5057b01bd99350:TODO.org
    params:  question (in natural language)
    returns: question ids-list
 *** DONE so-clean-string
@@ -13,26 +17,33 @@
    side-effect: sets *so-json-response* to parsed json response of the api call
    returns: nil
 
+<<<<<<< HEAD:so-project2.org
 * DONE json interaction functions
 ** DONE get-question-title-id-list
+=======
+
+* DONE json interaction functions
+** get-question-title-id-list
+>>>>>>> cc4d399e796ccee742c4e36a7e5057b01bd99350:TODO.org
    no params, uses global *so-json-response* variable to get question titles and ids
    return: ((title.id) ...)
 ** DONE get-question-answers
    params: question-id
-   returns: (answer1 answer2 ...)
+   returns: (answer1 answer2 ...) each element is an associative list of original json reponse attributes of answer 
 
-* form adjustments
-** make-answer-displayable
-   param: (answer1 answer2 ...)
-   returns ((displayable-answer . raw-answer) ...)
 
 * helm-ui
-** display-answer
+** DONE display-questions-ui
+   param: ((ques-title. ques-id))
+   does: makes helm-ui and returns selection
+   return : returns selected ques-id
+** display-answers-ui
+   param: question-id
+   does: makes helm-ui containing answers
+   returns: answer-alist of the selection
+*** displayable-answer
+    params: answer-associtation-list
+    returns: a single line in the form "[<votes>] answer stripped of html tags ..."
+** render-answer
    param: answer-full-body
    does: display the answer in a buffer
-** action-question
-   param: question-id
-   does: makes helm-ui contains answers and attaches appropriate action
-** display-questions
-   param: ((ques-title. ques-id))
-   does: makes helm-ui and attaches appropriate action
